@@ -1,0 +1,34 @@
+{
+	"name": "bun-react-template",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"main": "src/index.tsx",
+	"module": "src/index.tsx",
+	"scripts": {
+		"dev": "bun --hot dev_server.ts",
+		"build": "bun run build.ts",
+		"gen-schema": "bunx openapi-typescript https://app.docupanda.io/openapi.json -o src/api_schema.ts"
+	},
+	"dependencies": {
+		"@jsonforms/core": "^3.5.1",
+		"@jsonforms/material-renderers": "^3.5.1",
+		"@jsonforms/react": "^3.5.1",
+		"@r2wc/react-to-web-component": "^2.0.4",
+		"@react-pdf-viewer/core": "^3.12.0",
+		"@tanstack/react-query": "^5.74.7",
+		"bun-plugin-tailwind": "^0.0.14",
+		"openapi-fetch": "^0.13.5",
+		"openapi-react-query": "^0.3.1",
+		"openapi-typescript": "^7.6.1",
+		"react": "^19",
+		"react-dom": "^19",
+		"react-pdf": "^9.2.1",
+		"tailwindcss": "^4.0.6"
+	},
+	"devDependencies": {
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"@types/bun": "latest"
+	}
+}
