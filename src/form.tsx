@@ -8,31 +8,42 @@ export type Specifier = {
 	id: string
 }
 
+function resolveSchemaPointer(schema: JsonSchema, pointer: string | undefined): JsonSchema | undefined {
+	if (!pointer || !pointer.startsWith('#/')) return undefined
+	const parts = pointer.replace(/^#\//, '').split('/')
+	let current: any = schema
+	for (const part of parts) {
+		current = current[part]
+	}
+
+	return current
+}
+
 export type TrapRendererProps = {
+	schema: JsonSchema
 	activate(path: string): void
 	Renderer: React.ComponentType<OwnPropsOfControl>
 	props: OwnPropsOfControl
 }
 
-function TrapRenderer({ activate, Renderer, props }: TrapRendererProps) {
+function TrapRenderer({ activate, Renderer, schema, props }: TrapRendererProps) {
 	const inner = <Renderer {...props} />
+
 	if (!props.id) return inner
 
 	if (!props.id.startsWith('#/properties/')) return inner
 
-	const base = props.id.split('/').pop()
-	const parentPath = props.path ? `#/${props.path.replaceAll('.', '/')}` : '#'
-	const path = `${parentPath}/${base}`
-
-	const trueSchema = props.schema?.properties?.[base as any]
-
+	const trueSchema = resolveSchemaPointer(schema, props.id)
 	if (trueSchema?.type !== 'string') return inner
+
+	const cleanedId = props.id.replaceAll('/properties', '')
 
 	return (
 		<div
+			className="test-class"
 			onMouseOver={event => {
 				// event.stopPropagation()
-				activate(path)
+				activate(cleanedId)
 			}}
 		>
 			{inner}
@@ -42,6 +53,7 @@ function TrapRenderer({ activate, Renderer, props }: TrapRendererProps) {
 
 export type FormProps = {
 	schema: JsonSchema
+	uiSchema?: any
 	data: unknown
 	onDataChange(data: unknown): void
 	setActivePath(path: string | null): void
@@ -53,7 +65,7 @@ export function Form(props: FormProps) {
 			materialRenderers.map(renderer => ({
 				...renderer,
 				renderer: (renderProps: OwnPropsOfControl) => (
-					<TrapRenderer props={renderProps} Renderer={renderer.renderer} activate={props.setActivePath} />
+					<TrapRenderer props={renderProps} Renderer={renderer.renderer} activate={props.setActivePath} schema={props.schema} />
 				),
 			})),
 		[]
@@ -62,7 +74,7 @@ export function Form(props: FormProps) {
 	return (
 		<JsonForms
 			schema={props.schema}
-			uischema={{ type: 'Control', scope: '#' } as any}
+			uischema={props.uiSchema ?? { type: 'Control', scope: '#' }}
 			data={props.data}
 			cells={materialCells}
 			renderers={trappedRenderers}

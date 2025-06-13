@@ -1,0 +1,35 @@
+app = "docupanda-review"
+primary_region = "sea"
+
+[build]
+# You can leave this empty since you're using a Dockerfile
+
+[env]
+PORT = "3000"
+# Optional: remove this if you're using `fly secrets` instead
+# DOCUPANDA_API_KEY = "your_api_key_here"
+
+[http_service]
+internal_port = 3000
+force_https = true
+auto_stop_machines = "stop"
+auto_start_machines = true
+min_machines_running = 0
+processes = ["app"]
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+[[vm]]
+memory = "1gb"
+cpu_kind = "shared"
+cpus = 1

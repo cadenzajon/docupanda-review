@@ -1,50 +1,71 @@
 import createClient from 'openapi-react-query'
 import createFetchClient from 'openapi-fetch'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import { type paths } from './api_schema'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient()
-const client = createClient(createFetchClient<paths>({ baseUrl: 'https://app.docupanda.io/' }))
+function createAuthedClient(apiKey: string) {
+	return createClient(
+		createFetchClient<paths>({
+			baseUrl: 'https://app.docupipe.ai/',
+			fetch: (url, options: RequestInit = {}) =>
+				fetch(url, {
+					...options,
+					headers: {
+						...(options.headers || {}),
+						'X-API-Key': apiKey,
+						accept: 'application/json',
+						'Content-Type': 'application/json',
+					},
+				}),
+		})
+	)
+}
 
-const ApiProvider = createContext<string | null>(null)
+export const ApiProvider = createContext<ReturnType<typeof createAuthedClient> | null>(null)
 
 export function ProvideApi(props: { apiKey: string; children: React.ReactNode }) {
+	const client = useMemo(() => createAuthedClient(props.apiKey), [props.apiKey])
 	return (
 		<QueryClientProvider client={queryClient}>
-			<ApiProvider.Provider value={props.apiKey}>{props.children}</ApiProvider.Provider>
+			<ApiProvider.Provider value={client}>{props.children}</ApiProvider.Provider>
 		</QueryClientProvider>
 	)
 }
 
-function useHeaders() {
-	const apiKey = useContext(ApiProvider)
-	if (!apiKey) throw new Error('useApiKey must be used within a ProvideApiKey')
+function useClient() {
+	const client = useContext(ApiProvider)
+	if (!client) throw new Error('Must be used within ProvideApi')
+	return client
+}
 
-	return { 'X-API-Key': apiKey, accept: 'application/json' }
+export function useUpdateSchema() {
+	return useClient().useMutation('post', '/schema/update')
 }
 
 export function useReviewObjects() {
-	return client.useQuery('get', '/reviews', { headers: useHeaders() })
+	return useClient().useQuery('get', '/reviews')
 }
 
 export function useReviewObject(standardizationId: string) {
-	return client.useQuery('get', '/review', {
+	return useClient().useQuery('get', '/review', {
 		params: { query: { standardization_id: standardizationId } },
-		headers: useHeaders(),
 	})
 }
 
 export function useSchema(schemaId: string) {
-	return client.useQuery('get', '/schema/{schema_id}', {
+	return useClient().useQuery('get', '/schema/{schema_id}', {
 		params: { path: { schema_id: schemaId } },
-		headers: useHeaders(),
 	})
 }
 
 export function useOriginalUrl(documentId: string) {
-	return client.useQuery('get', '/document/{document_id}/download/original-url', {
+	return useClient().useQuery('get', '/document/{document_id}/download/original-url', {
 		params: { path: { document_id: documentId } },
-		headers: useHeaders(),
+		refetchOnWindowFocus: false,
+		refetchOnMount: false,
+		refetchOnReconnect: false,
+		refetch: false,
 	})
 }

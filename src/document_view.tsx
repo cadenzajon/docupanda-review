@@ -1,7 +1,6 @@
-import { Worker, Viewer } from '@react-pdf-viewer/core'
 import { useOriginalUrl } from './api'
 import { EmptyView } from './empty_view'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -28,39 +27,41 @@ export function DocumentView(props: DocumentViewProps) {
 	const originalUrl = useOriginalUrl(props.documentId)
 	const [numPages, setNumPages] = useState(0)
 
-	if (!originalUrl.data) return <EmptyView emptiness={originalUrl} />
+	const processedDecorations = props.decorations.map(d => ({
+		...d,
+		left: d.x * 100,
+		top: d.y * 100,
+		width: (d.width - d.x) * 100,
+		height: (d.height - d.y) * 100,
+	}))
 
-	console.log(props.decorations, props.activePath)
+	if (!originalUrl?.data) return <EmptyView emptiness={originalUrl} />
 
 	return (
-		<div className="w-full h-full overflow-y-auto">
+		<div className="inline-block relative max-h-screen overflow-y-scroll">
 			<div className="relative">
-				<Document file={originalUrl.data.url} onLoadSuccess={({ numPages }) => setNumPages(numPages)} loading="Loading PDF...">
-					{Array.from({ length: numPages }).map((_, i) => {
-						return (
-							<div key={i} className="relative w-[800px] overflow-hidden">
-								<Page pageNumber={i + 1} renderAnnotationLayer={false} renderTextLayer={false} width={800} />
-
-								<div className="absolute inset-0">
-									{props.decorations
-										.filter(decoration => decoration.pageNumber === i + 1)
-										.map(decoration => (
-											<div
-												key={decoration.path}
-												className={`absolute border-2 ${props.activePath === decoration.path ? 'border-red-600' : 'border-slate-600'}`}
-												style={{
-													left: `${decoration.x * 100}%`,
-													top: `${decoration.y * 100}%`,
-													width: `${decoration.width * 100}%`,
-													height: `${decoration.height * 100}%`,
-												}}
-											/>
-										))}
-								</div>
-							</div>
-						)
-					})}
+				<Document file={originalUrl.data} onLoadSuccess={pdf => setNumPages(pdf.numPages)}>
+					<Page pageNumber={1} renderAnnotationLayer={false} renderTextLayer={false} className="w-full h-auto" />
 				</Document>
+
+				{/* Overlay bounding boxes */}
+				{processedDecorations
+					.filter(d => props.activePath === d.path && d.x)
+					.map((decoration, i) => {
+						const active = props.activePath === decoration.path && decoration.x
+						const style = {
+							position: 'absolute' as const,
+							left: `${decoration.left}%`,
+							top: `${decoration.top}%`,
+							width: `${decoration.width}%`,
+							height: `${decoration.height}%`,
+							border: `3px solid ${active ? 'red' : 'blue'}`,
+							backgroundColor: `${active ? '#ffff0080' : 'transparent'}`,
+							boxSizing: 'border-box',
+							pointerEvents: 'none',
+						}
+						return <div className="bounding-box" key={i} style={style as any} />
+					})}
 			</div>
 		</div>
 	)

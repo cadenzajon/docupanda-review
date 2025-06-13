@@ -17,23 +17,27 @@ export function ListReviews(props: ListReviewsProps) {
 	if (!reviews.data) return <EmptyView emptiness={reviews} />
 
 	return (
-		<div className="flex flex-col">
-			{reviews.data.map(review => {
-				return (
-					<button
-						key={review.standardizationId}
-						onClick={() =>
-							props.onSelect({
-								standardizationId: review.standardizationId,
-								documentId: review.documentId,
-								schemaId: review.schemaId || null,
-							})
-						}
-					>
-						{review.filename}
-					</button>
-				)
-			})}
+		<div className="">
+			<select
+				className="bg-white p-2 rounded border border-gray-300 shadow-sm"
+				onChange={e => {
+					const value = reviews.data.find(review => review.standardizationId === e.target.value) as ActiveReview
+					props.onSelect({
+						standardizationId: value.standardizationId,
+						documentId: value.documentId,
+						schemaId: value.schemaId || null,
+					})
+				}}
+			>
+				<option value="">Select a review</option>
+				{[...new Map(reviews.data.map(review => [review.standardizationId, review])).values()].map(review => {
+					return (
+						<option key={review.standardizationId} value={review.standardizationId}>
+							{review.filename}
+						</option>
+					)
+				})}
+			</select>
 		</div>
 	)
 }
