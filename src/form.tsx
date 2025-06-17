@@ -78,7 +78,7 @@ export function Form(props: FormProps) {
 			data={props.data}
 			cells={materialCells}
 			renderers={trappedRenderers}
-			onChange={({ data }) => console.log(data)}
+			onChange={({ data }) => null}
 		/>
 	)
 }

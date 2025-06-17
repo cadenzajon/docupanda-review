@@ -25,7 +25,6 @@ export type DocumentViewProps = {
 
 export function DocumentView(props: DocumentViewProps) {
 	const originalUrl = useOriginalUrl(props.documentId)
-	const [numPages, setNumPages] = useState(0)
 
 	const processedDecorations = props.decorations.map(d => ({
 		...d,
@@ -40,7 +39,7 @@ export function DocumentView(props: DocumentViewProps) {
 	return (
 		<div className="inline-block relative max-h-screen overflow-y-scroll">
 			<div className="relative">
-				<Document file={originalUrl.data} onLoadSuccess={pdf => setNumPages(pdf.numPages)}>
+				<Document file={originalUrl.data}>
 					<Page pageNumber={1} renderAnnotationLayer={false} renderTextLayer={false} className="w-full h-auto" />
 				</Document>
 

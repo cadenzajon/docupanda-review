@@ -1,6 +1,9 @@
 import { createRoot } from 'react-dom/client'
 import { DocupandaReview } from './src'
+import { BrowserRouter } from 'react-router'
 
-const apiKey = await fetch('/api-key').then(res => res.text())
-
-createRoot(document.body).render(<DocupandaReview apiKey={apiKey} />)
+createRoot(document.body).render(
+	<BrowserRouter>
+		<DocupandaReview />
+	</BrowserRouter>
+)

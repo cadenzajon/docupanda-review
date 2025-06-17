@@ -4,7 +4,6 @@ import { createContext, useContext, useMemo } from 'react'
 import { type paths } from './api_schema'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const queryClient = new QueryClient()
 function createAuthedClient(apiKey: string) {
 	return createClient(
 		createFetchClient<paths>({
@@ -26,7 +25,20 @@ function createAuthedClient(apiKey: string) {
 export const ApiProvider = createContext<ReturnType<typeof createAuthedClient> | null>(null)
 
 export function ProvideApi(props: { apiKey: string; children: React.ReactNode }) {
+	const queryClient = useMemo(
+		() =>
+			new QueryClient({
+				defaultOptions: {
+					queries: {
+						refetchOnWindowFocus: false, // 👈 disable tab focus refetch
+					},
+				},
+			}),
+		[]
+	)
+
 	const client = useMemo(() => createAuthedClient(props.apiKey), [props.apiKey])
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<ApiProvider.Provider value={client}>{props.children}</ApiProvider.Provider>
@@ -63,9 +75,5 @@ export function useSchema(schemaId: string) {
 export function useOriginalUrl(documentId: string) {
 	return useClient().useQuery('get', '/document/{document_id}/download/original-url', {
 		params: { path: { document_id: documentId } },
-		refetchOnWindowFocus: false,
-		refetchOnMount: false,
-		refetchOnReconnect: false,
-		refetch: false,
 	})
 }

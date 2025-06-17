@@ -14,6 +14,7 @@ export type ReviewViewProps = {
 }
 
 export function ReviewView(props: ReviewViewProps) {
+	// console.log('ReviewView render', props)
 	const review = useReviewObject(props.standardizationId)
 	const schema = useSchema(props.schemaId)
 	const [activePath, setActivePath] = useState<string | null>(null)
@@ -51,7 +52,7 @@ export function ReviewView(props: ReviewViewProps) {
 									schema={schema.data.jsonSchema as any}
 									uiSchema={uiSchema}
 									data={parsed?.data ?? {}}
-									onDataChange={console.log}
+									onDataChange={() => null}
 									setActivePath={setActivePath}
 								/>
 							</div>
